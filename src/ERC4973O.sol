@@ -1,22 +1,25 @@
 // SPDX-License-Identifier: CC0-1.0
 pragma solidity ^0.8.8;
 
-import {SignatureChecker} from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
-import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
-import {BitMaps} from "@openzeppelin/contracts/utils/structs/BitMaps.sol";
+import {SignatureChecker} from "openzeppelin/utils/cryptography/SignatureChecker.sol";
+import {EIP712} from "openzeppelin/utils/cryptography/EIP712.sol";
+import {BitMaps} from "openzeppelin/utils/structs/BitMaps.sol";
 
 import {ERC165} from "./ERC165.sol";
 
 import {IERC721Metadata} from "./interfaces/ERC721Metadata.sol";
-import {IERC4973} from "./interfaces/ERC4973.sol";
+import {IERC4973} from "./interfaces/IERC4973.sol";
 
 bytes32 constant AGREEMENT_HASH = keccak256(
-    "Agreement(address active,address passive,bytes metadata)"
+    "Agreement(address active,address passive)"
 );
 
-/// @notice Modified version of the reference implementation of EIP-4973 tokens.
+/// @notice Modified version of the reference implementation of EIP-4973 (Account-bound) tokens.
+///         This implementation goes back to using strictly IERC721Metadata compliance to avoid any
+///         ERC721 instantiation and be truly account-bound to an EOA.
+///         Heavily inspired by the reference implementation (https://github.com/rugpullindex/ERC4973/blob/master/src/ERC4973.sol)
+///         by Tim Daubenschütz.
 /// @author Felix Nordén
-/// Heavily inspired taken from the reference implementation (https://github.com/rugpullindex/ERC4973/blob/master/src/ERC4973.sol)
 abstract contract ERC4973O is EIP712, ERC165, IERC721Metadata, IERC4973 {
     using BitMaps for BitMaps.BitMap;
     BitMaps.BitMap internal _usedHashes;
@@ -28,12 +31,12 @@ abstract contract ERC4973O is EIP712, ERC165, IERC721Metadata, IERC4973 {
     mapping(address => uint256) private _balances;
 
     constructor(
-        string memory name_,
-        string memory symbol_,
+        string memory name,
+        string memory symbol,
         string memory version
-    ) EIP712(name_, version) {
-        _name = name_;
-        _symbol = symbol_;
+    ) EIP712(name, version) {
+        _name = name;
+        _symbol = symbol;
     }
 
     function supportsInterface(
@@ -78,6 +81,10 @@ abstract contract ERC4973O is EIP712, ERC165, IERC721Metadata, IERC4973 {
         return owner;
     }
 
+    function tokenURI(uint256 tokenId) external virtual pure returns(string memory) {
+        return _baseURI();
+    }
+
     function _give(
         address to,
         bytes calldata signature
@@ -119,11 +126,10 @@ abstract contract ERC4973O is EIP712, ERC165, IERC721Metadata, IERC4973 {
 
     function _getHash(
         address active,
-        address passive,
-        bytes calldata metadata
+        address passive
     ) internal view returns (bytes32) {
         bytes32 structHash = keccak256(
-            abi.encode(AGREEMENT_HASH, active, passive, keccak256(metadata))
+            abi.encode(AGREEMENT_HASH, active, passive)
         );
         return _hashTypedDataV4(structHash);
     }
@@ -151,5 +157,9 @@ abstract contract ERC4973O is EIP712, ERC165, IERC721Metadata, IERC4973 {
         delete _owners[tokenId];
 
         emit Transfer(owner, address(0), tokenId);
+    }
+    
+    function _baseURI() internal virtual pure returns (string memory) {
+        return "";
     }
 }
