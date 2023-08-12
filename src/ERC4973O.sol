@@ -84,7 +84,7 @@ abstract contract ERC4973O is EIP712, ERC165, IERC721Metadata, IERC4973 {
 
     function tokenURI(
         uint256 tokenId
-    ) external pure virtual returns (string memory) {
+    ) external view virtual returns (string memory) {
         return _baseURI();
     }
 
