@@ -6,9 +6,9 @@ Heavy inspiration has been taken from the original author Tim Daubenschütz [ERC
 but this implementation splits up part of the interface into multiple parts to give the consumer 
 more of an opt-in as to whether they want to use `give`, `take`, or both by implementing the interfaces
 
-- `IERC49732Giveable` (for `give`)
-- `IERC49732Takeable` (for `take`)
-- `IERC49732Exchangeable` (for both `give` and `take`)
+- `IERC4973Giveable` (for `give`)
+- `IERC4973Takeable` (for `take`)
+- `IERC4973Exchangeable` (for both `give` and `take`)
 
 ## Installation
 
